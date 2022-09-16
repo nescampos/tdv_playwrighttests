@@ -1,8 +1,8 @@
 using Microsoft.Playwright.NUnit;
 using NUnit.Framework;
-using System;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
+
 
 [Parallelizable(ParallelScope.Self)]
 public class Tests : PageTest
@@ -39,30 +39,18 @@ public class Tests : PageTest
     }
 
     [Test]
-    public async Task Filling_And_Submitting_ContactForm_With_InvalidEmail()
+    public async Task Filling_Invalid_Email_Should_Show_ValidationError()
     {
         await Page.GotoAsync($"{webAppUrl}/Home/Form");
-        await Page.Locator("text=First name").FillAsync("Néstor");
-        await Page.Locator("text=Last name").FillAsync("Campos");
-        await Page.Locator("text=Email address").FillAsync("nestorgmail.com");
-        await Page.Locator("text=Birth date").FillAsync("1989-03-16");
-        await Page.Locator("text=Send").ClickAsync();
-        await Expect(Page).ToHaveURLAsync($"{webAppUrl}/Home/Form");
-        await Expect(Page.Locator("text=The Email address field is not a valid e-mail address.")).ToBeVisibleAsync();
-        
-    }
 
-    [Test]
-    public async Task Filling_And_Submitting_ContactForm_With_InvalidBirthdate()
-    {
-        await Page.GotoAsync($"{webAppUrl}/Home/Form");
-        await Page.Locator("text=First name").FillAsync("Néstor");
-        await Page.Locator("text=Last name").FillAsync("Campos");
-        await Page.Locator("text=Email address").FillAsync("nestor@gmail.com");
-        await Page.Locator("text=Birth date").FillAsync("2023-03-16");
+        ILocator emailValidationLocator = Page.Locator("text=The Email address field is not a valid e-mail address.");
+        await Expect(emailValidationLocator).Not.ToBeVisibleAsync();
+
+        await Page.Locator("text=Email address").FillAsync("nestorgmail.com");
         await Page.Locator("text=Send").ClickAsync();
-        await Expect(Page).ToHaveURLAsync($"{webAppUrl}/Home/Form");
-        await Expect(Page.Locator("text=The birth date is invalid.")).ToBeVisibleAsync();
+
+        await Expect(Page).ToHaveURLAsync(new Regex(".*Home/Form"));
+        await Expect(emailValidationLocator).ToBeVisibleAsync();
     }
 
 }
